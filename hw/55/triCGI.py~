@@ -1,0 +1,67 @@
+#!/usr/bin/python
+print "Content-type: text/html\n"
+print ""
+
+import cgi
+import cgitb
+from math import sqrt
+
+#cgitb.enable()
+
+#Meng Kun Yan and Connie Lei
+#IntroCS2 pd8
+#HW55 - Clever Genii, Inc.
+#2016-05-26
+
+#Perimeter of a triangle
+def perimeter(a,b,c):
+  return a+b+c
+
+#Area of a triangle(using Heron's Formula)
+#If triangle doesn't exist, then -1 is returned
+def area(a,b,c):
+  s = perimeter(a,b,c) / 2
+  try:
+    return sqrt(s*(s-a)*(s-b)*(s-c))
+  except:
+    return -1
+
+# Displays the sides, area, and perimeter 
+def display():
+  params = cgi.FieldStorage()
+  try:
+    a = int(params['a'].value)
+    b = int(params['b'].value)
+    c = int(params['c'].value)
+    A = area(a,b,c)
+    P = perimeter(a,b,c)
+  except:
+    A = -1
+    a = 0
+    b = 0
+    c = 0
+
+  print "<p>Sides: " + str(a) + ", " + str(b) + ", " + str(c) + "</p>"
+  if A == -1:
+    print "<p>This triangle does not exist</p>"
+  else: 
+    print "<p>Area: " + str(A) + "</p>"
+    print "<p>Perimeter: " + str(P) + "</p>"
+
+# HTML
+header = """
+<!DOCTYPE html>
+<html>
+<head></head>
+<body>
+"""
+
+footer = """
+</body>
+</html>
+"""
+
+print header
+display()
+print footer
+

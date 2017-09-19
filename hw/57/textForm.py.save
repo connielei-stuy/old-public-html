@@ -1,0 +1,33 @@
+#!/usr/bin/python
+print "Content-type: text/html\n"
+print ""
+
+import cgi
+import cgitb
+
+#cgitb.enable
+
+x =  cgi.FieldStorage()
+print x
+
+def run():
+	text = x["text"].value
+	print text
+	program = x["program"].value
+	print program
+	if program == "Reverse":
+		text= text[::-1]
+
+		else:
+		text = rot13(text)
+	if x["bold"].value == "True":
+		text = "<b>" + text + "</b>"
+	if x["italics"].value == "True":
+		text = "<i>" + text + "</i>"
+	if x["underline"].value == "True":
+		text = "<u>" + text + "</u>"
+	if x["larger size"].value == "True":
+		text = "<font size = '12'>" + text +"</font>"
+	print text
+
+run()

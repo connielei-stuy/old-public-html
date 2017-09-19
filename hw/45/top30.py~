@@ -1,0 +1,60 @@
+#!/usr/bin/python
+print "content-type: text/html\n"
+print ""
+
+lit = open( "lit.txt" , "r" )
+text = lit.read()
+lit.close()
+
+def stringfy(text): 
+    inputL = text.lower().split()
+    for word in inputL:
+        inputL[inputL.index(word)] = inputL.strip(".?,:!;\n")
+    return inputL
+
+def wordTally( L ) :
+    tally = { }
+    for word in L :
+        if word in tally :
+            tally[ word ] += 1
+        else :
+            tally[ word ] = 1
+    return tally
+
+def reverseDict(dictionary):
+    dictKeys = dictionary.keys()[::-1]
+    dictValues = dictionary.values()[::-1]
+    newDict = {}
+    for key in dictKeys:
+        newDict[key] = dictValues[dictKeys.index(key)]
+    return newDict
+ 
+def topn( d , n ) :
+    finalDN = { }
+    key = d.keys()
+    value = d.values()
+    while n > 0 :
+        tempV = value.index( max( value ))
+        finalDN[ key[ tempV ] ] = max( value )
+        del value[ tempV ]
+        del key[ tempV ]
+        n -= 1
+    return reverseDict(finalDN)
+
+print '<!DOCTYPE html> \n<html> \n<body style="text-align:center">'
+print "<h2><b> A FLORAL FANTASY IN AN OLD ENGLISH GARDEN </b></h2>"
+print '<a href="lit.txt">Full Story</a>'
+
+def tablefy( d ):
+    print "<table border = '1'> \n<r> <td> Top 30 Most Common Words </td></r> \n<tr> <td> Word </td> <td> Frequency </td> </tr>"
+    for i in d :
+        print "<tr> <td> " + str( i ) + " </td> <td> " + str( d[ i ] ) + " </td> </tr>"
+    print "</table>"
+
+wordsList = (stringfy(text))
+dictionary = wordTally(wordsList)
+htmlInput = topn(dictionary,30)
+tablefy(htmlInput)
+
+print '</body> \n</html>'
+

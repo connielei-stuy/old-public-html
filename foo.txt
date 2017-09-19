@@ -1,0 +1,284 @@
+#!/usr/bin/python
+print "content-type: text/html\n"
+print ""
+
+import cgi
+import cgitb
+
+cgitb.enable()
+
+rawInput = cgi.FieldStorage()
+# this always returns
+# FieldStorage(None, None, [])
+
+name = ["_", "_"]
+
+def refine():
+	inputCords = {}
+	for kV in rawInput:
+		if "username" in kV:
+			name[0] = rawInput[kV].value
+		elif "opponent" in kV:
+			name[1] = rawInput[kV].value
+		elif "file" in kV:
+			filename = rawInput[kV].value
+			filename = filename.strip(".txt")
+			filename = filename.split("_")
+			name[0] = filename[0]
+			name[1] = filename[1]
+		else:
+			inputCords[kV] = rawInput[kV].value
+	return inputCords
+
+inputCords = refine()
+
+def fileOpen(filename):
+	inStream = open(filename,"r")
+	Input = inStream.readlines()
+	inStream.close()
+	return Input
+
+user = name[0]
+opponent = name[1]
+name = "data/games/" + name[0] + "_" + name[1]
+rawData = fileOpen(name + ".txt")
+tRawData = rawData[6]
+DICTIONARY = fileOpen("data/dict.txt")
+
+# Changes the output from txt to list
+def change():
+    temp = tRawData.split("], [")
+    temp[0] = temp[0][2:]
+    temp[14] = temp[14][:-2]
+    final = []
+    for row in temp:
+        n = row[1::5]
+        rowList = []
+        for pos in n:
+            rowList += [pos]
+        final += [rowList]
+    return final
+
+tableRaw = change()
+	
+# Changes list to dict
+def dictionary(tableList):
+        tableDict = {}
+        r = 1
+        for row in tableList:
+                n = 1
+                for cell in row:              
+                        tableDict[str(n) + "," + str(r)] = cell
+                        n += 1  
+		r += 1
+        return tableDict
+
+preTable = dictionary(tableRaw)
+
+# Merge the input dictionary with the existing words on baord
+def merge(dict1,dict2):
+	newDict = dict1
+	for cords in dict2:
+		newDict[cords] = dict2[cords]
+	return newDict
+
+postTable = merge(preTable,inputCords)
+
+# Finds min and max of coordinates of word, returns all the coordinates in between
+def sort(cords):
+	finalCords = []
+	if cords == {}:
+		return finalCords
+	x = []
+	y = []
+	for coordinate in cords:
+		x += [int(coordinate.strip("[").split(",")[0])]
+		y += [int(coordinate.strip("]").split(",")[1])]
+	if min(x) == max(x):
+		x = min(x)
+		tempy = min(y)
+		while tempy <= max(y):
+			finalCords += [[x,tempy]]
+			tempy += 1
+	if min(y) == max(y):
+		y = min(y)
+		tempx = min(x)
+		while tempx <= max(x):
+			finalCords += [[tempx,y]]
+			tempx += 1
+	return finalCords
+
+orderedCords = sort(inputCords)
+ 
+def borderCheck(square):
+	newSquare = []
+	for direction in square:
+		if direction[0] <16 and direction[1] <16 and \
+		   direction[0] > 0 and direction[1] > 0:
+			newSquare += [direction]
+	return newSquare
+
+# Takes in coordinates of letters in word, returns a list of the coordinates on the border of the word
+def connectCheck(cords):
+	connectCords = []
+	for coordinate in cords:
+		left = [coordinate[0] - 1,coordinate[1]]
+		right = [coordinate[0] + 1,coordinate[1]]
+		up = [coordinate[0],coordinate[1] + 1]
+		down = [coordinate[0],coordinate[1] - 1]
+		tempCords = borderCheck([left,right,up,down])
+		for coordinate in tempCords:
+			if not coordinate in cords and not coordinate in connectCords:
+				connectCords += [coordinate]
+	return connectCords
+
+adjacentCords = connectCheck(orderedCords)
+
+# Turns the coordinates into a string
+def stringfy(cords):
+	return str(cords[0]) + "," + str(cords[1])
+
+# Checks if adjacent cells have values
+def filled(connectCords):
+	filledCords = []
+	for cords in connectCords:
+		temp = stringfy(cords)
+		if preTable[temp] != " ":
+			filledCords += [cords]
+	return filledCords
+
+print "adjacentCords"
+print adjacentCords
+
+filledCords = filled(adjacentCords)
+
+print "filledCords"
+print filledCords
+ 
+def seperateBranch(inputCords,filledCords):
+	print orderedCords
+        print (filledCords == [] and [8,8] in orderedCords)
+	if filledCords == [] and [8,8] in orderedCords:
+                word = ""
+                for cords in orderedCords:
+                        word += postTable[stringfy(cords)]
+			print word
+			print cords
+			print postTable[stringfy(cords)]
+                return [word]
+        wordsList = []
+	print filledCords
+        for coordinate in filledCords:
+		print coordinate
+                word = postTable[stringfy(coordinate)]
+		print word
+                rcords = coordinate
+		print rcords[0] <= 15 and postTable[stringfy(rcords)] ! = " "
+                while rcords[0] <= 15 and postTable[stringfy(rcords)] != " ":
+                        word += postTable[stringfy(rcords)]
+                        rcords[0] = [rcords[0] + 1]
+                lcords = coordinate
+                while lcords[0] >= 1 and postTable[stringfy(lcords)] != " ":
+                        word = postTable[stringfy(lcords)] + words
+                        lcords[0] = [lcords[0] - 1]
+                if word != postTable[stringfy(cords)] and not word in wordsList:
+                        wordsList += [word]
+                word = tableDict[stringfy(coordinate)] 
+                dcords = coordinate
+                while dcords[1] <= 15 and postTable[stringfy(dcords)] != " ":
+                        word += postTable[stringfy(rcords)]
+                        dcords[1] = [dcords[1] + 1]
+                ucords = coordinate
+                while ucords[1] >= 1 and postTable[stringfy(ucords)] != " ":
+                        word = postTable[stringfy(ucords)] + words
+                        ucords[1] = [ucords[1] - 1]
+                if word != postTable[stringfy(cords)] and not word in wordsList:
+                        wordsList += [word]
+        return wordsList
+
+words = seperateBranch(orderedCords,filledCords)
+print words
+"""
+def checkWords(words):
+	n = True
+	for word in words:
+		if not word in DICTIONARY:
+			n = False
+	return n
+
+yellow=[[4,1],[12,1],[15,4],[1,4],[4,15],[12,15],[1,12],[15,12]]
+blue=[[2,3],[2,13],[3,2],[3,5],[3,14],[3,11],[5,3],[5,7],[5,9],[5,13],[7,5],[7,11],\
+	  [14,3],[14,13],[13,2],[13,5],[13,14],[13,11],[11,3],[11,7],[11,9],[11,13],[9,5],[9,11]]
+red = [[2,6],[2,10],[4,8],[6,2],[6,14],[8,4],[8,12],[10,14],[10,2],[14,6],[14,10],[12,8]]
+green=[[1,7],[1,9],[4,4],[4,12],[6,6],[6,10],[7,1],[7,15],[9,1],[9,15],[10,6],[10,10],[15,7],[15,9],[12,4],[12,12]]
+colors = yellow + blue + red + green + [[8,8]]
+
+def cellData(cords,value):
+	start = "\t\t<td width='50px' height='50px'"
+	ending = "\n\t\t</td>\n"
+	form = value
+	if value == " ":
+		form = "\n\t\t\t<input type ='text' name='" + str(cords) + "'size='1'maxlength='1'>"
+	if cords in colors:
+		if cords in yellow:
+			special = "bgcolor='yellow'>"
+			return start + special + form + ending
+		if cords in red:
+			special = "bgcolor='red'>"
+			return start + special + form + ending
+		if cords in green:
+			special = "bgcolor = 'green'>"
+			return start + special + form + ending
+		if cords == [8,8]:
+			special = "bgcolor = 'purple'>"
+			return start + special + form + ending
+		if cords in blue:
+			special = "bgcolor='blue'>"
+			return start + special + form + ending
+	else:
+		special = ">"
+		return start + special + form + ending
+
+def table():
+	html = "<html>\n <form name = 'input' method ='POST' action ='../../updates.py?username=" + user + "&opponent=" + opponent + "'>\n\
+<table border='1'align='center'>\n"
+	r = 1
+	while r < 16:
+		tableRow = "\t<tr>\n"
+		n = 1
+		while n != 16:
+			cords = stringfy([n,r])
+			tableRow += cellData([n,r],postTable[cords])
+			n += 1
+		r += 1
+		tableRow += "\t</tr>\n"
+		html += tableRow
+	html += "</table>\n<input type='submit'>\n</html>"
+	return html
+
+def update(inputtedL):
+	for cords in inputtedL:
+		n = cords[0]
+		r = cords[1]
+		tableRaw[r][n] = postTable[stringfy(cords)]
+
+def reBuild():
+	if checkWords(words):
+		update(orderedCords)
+		rawData[6] = str(tableRaw)
+		return table()
+#	else:
+#		print '<meta http-equiv="refresh" content="0;url=updates.py?username=' + user + '&opponent=' + opponent + '"/>'
+
+html = reBuild()
+a = "".join(rawData)
+
+def fileWrite(output,filename):
+	outStream = open(str(filename),"w")
+	outStream.write(output)
+	outStream.close()
+
+fileWrite(html, name +".html")
+fileWrite(a, name + ".txt")
+print '<meta http-equiv="refresh" content="0;url=data/games/' + user + '_' + opponent + '.html"/>'
+"""
